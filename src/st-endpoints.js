@@ -2471,14 +2471,14 @@ async function readThemeByName(userCache, directoryPath, themeName) {
     };
 }
 
-async function invalidateCachedSettingsPayloadIfThemeDirectoryChanged(userCache, directoryPath) {
+async function invalidateCachedSettingsPayloadIfDirectoryChanged(userCache, sectionName, directoryPath) {
     if (!userCache.payload || userCache.payloadDirty || !directoryPath) {
         return false;
     }
 
-    const sectionCache = userCache.sections.get('themes');
+    const sectionCache = userCache.sections.get(sectionName);
     if (!sectionCache) {
-        markSettingsPayloadDirty(userCache, 'theme-directory-signature-missing');
+        markSettingsPayloadDirty(userCache, `${sectionName}-directory-signature-missing`);
         return true;
     }
 
@@ -2496,7 +2496,7 @@ async function invalidateCachedSettingsPayloadIfThemeDirectoryChanged(userCache,
     });
 
     if (changed) {
-        markSettingsPayloadDirty(userCache, 'theme-directory-signature-changed');
+        markSettingsPayloadDirty(userCache, `${sectionName}-directory-signature-changed`);
     }
 
     return changed;
@@ -2832,8 +2832,16 @@ async function getFastSettingsPayload(req, userHandle, metrics = {}, options = {
 
     ensureSettingsPayloadWatchers(userCache, directories);
 
+    // fs.watch may miss edits made on a host-mounted directory; validate preset signatures on cache hits.
+    await Promise.all([
+        ['koboldai_settings', directories.koboldAI_Settings],
+        ['novelai_settings', directories.novelAI_Settings],
+        ['openai_settings', directories.openAI_Settings],
+        ['textgenerationwebui_presets', directories.textGen_Settings],
+    ].map(([sectionName, directoryPath]) => invalidateCachedSettingsPayloadIfDirectoryChanged(userCache, sectionName, directoryPath)));
+
     if (payloadOptions.themeMode === SETTINGS_THEME_MODE_LAZY) {
-        await invalidateCachedSettingsPayloadIfThemeDirectoryChanged(userCache, directories.themes);
+        await invalidateCachedSettingsPayloadIfDirectoryChanged(userCache, 'themes', directories.themes);
     }
 
     if (canUseCachedSettingsPayload(userCache, payloadOptions)) {

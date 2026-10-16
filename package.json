@@ -1,12 +1,13 @@
 {
   "name": "sillytavern-baibaoku",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": "BaiBaoKu, a universal per-user KV storage server plugin for SillyTavern extensions.",
   "type": "module",
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test:save-generate": "node --experimental-vm-modules --test scripts/test-save-generate-tools.mjs"
+    "test:save-generate": "node --experimental-vm-modules --test scripts/test-save-generate-tools.mjs",
+    "test:regex-bridge": "node --experimental-vm-modules --test scripts/test-regex-bridge.mjs"
   },
   "engines": {
     "node": ">=20"

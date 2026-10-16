@@ -77,6 +77,20 @@ SQLite 使用 WAL 模式时会出现 `<database>.sqlite-wal` 和 `<database>.sql
 
 离线回归测试：`npm run test:save-generate`（不请求上游 API、不读写用户聊天）。黑名单检测和自动重新生成仍由前端负责，关闭页面后不会在服务端运行。
 
+## 正则引擎桥接
+
+`0.7.0` 起，柏宝库会在启动时把一段桥接代码注入酒馆的 `public/scripts/extensions/regex/engine.js`，让前端扩展能在每条显示正则执行前插一脚。注入块用 `// baibaoku regex bridge:start` / `end` 标记包裹，每次启动先清掉旧块再按锚点重插，可重复执行；`engine.js` 结构不匹配已知锚点时不会写入，并在控制台给出警告。
+
+桥接协议：`getRegexedString()` 运行每条正则前会先调用
+
+```js
+globalThis.__baibaokuRegexBridge?.beforeScript?.(script, finalString, context)
+```
+
+返回字符串时，这个字符串就被当作该条正则的执行结果（返回传入的 `finalString` 即等于跳过这条正则）；返回其它类型或抛错时，照常执行原正则。`context` 包含 `version`、`placement`、`isMarkdown`、`isPrompt`、`depth` 和 `characterOverride`。桥接本身不做任何判断，跳过哪些正则、什么时候跳过都由装监听的前端扩展决定（例如柏宝箱的「流式生成时跳过美化正则」只在流式生成中的楼层显示渲染里跳过替换内容带代码块的正则）。
+
+注入发生在插件 `init` 阶段，改的是磁盘上的 `engine.js`，所以更新柏宝库后必须重启 SillyTavern，并刷新页面才会生效；`/v1/status` 返回 `data.capabilities.regexBridge: true` 表示当前版本会做注入，不代表当前页面已经生效。离线回归测试：`npm run test:regex-bridge`（只测注入逻辑，不会改动真实的 `engine.js`）。
+
 ## 开发者文档
 
 - [API 文档](docs/api.md)

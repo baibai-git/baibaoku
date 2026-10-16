@@ -92,9 +92,10 @@ GET /api/plugins/baibaoku/v1/status
     "installed": true,
     "id": "baibaoku",
     "name": "柏宝库",
-    "version": "0.6.4",
+    "version": "0.7.0",
     "capabilities": {
-      "saveGenerateCompleteResponseTool": true
+      "saveGenerateCompleteResponseTool": true,
+      "regexBridge": true
     },
     "apiVersion": "v1",
     "storage": "per-user",
@@ -107,7 +108,7 @@ GET /api/plugins/baibaoku/v1/status
 }
 ```
 
-`capabilities` 声明当前版本支持的可选能力。`saveGenerateCompleteResponseTool` 为 `true` 时，save-generate 可以解包单个完整回复工具（见下文），前端据此决定是否接管这类请求。
+`capabilities` 声明当前版本支持的可选能力。`saveGenerateCompleteResponseTool` 为 `true` 时，save-generate 可以解包单个完整回复工具（见下文），前端据此决定是否接管这类请求。`regexBridge` 为 `true` 时，柏宝库已把正则桥接写进 `public/scripts/extensions/regex/engine.js`（见 `GET /v1/status` 之后的重启要求）；注意该字段只说明版本支持，是否真的在当前页面生效要看 `getRegexedString` 的源码里有没有 `__baibaokuRegexBridge`，更新柏宝库后未重启酒馆或未刷新页面时两者可能不一致。
 
 如果请求返回 404、403 或网络错误，调用方应该视为柏宝库不可用。柏宝库没安装时，它自己无法返回状态，所以“未安装”需要由调用方捕获请求失败来判断。
 

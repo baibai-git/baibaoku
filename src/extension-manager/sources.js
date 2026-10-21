@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import git from 'isomorphic-git';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import { createGitHttpClient } from './builtin-http.js';
 import { getCloudMirrors } from './cloud-mirrors.js';
 import { classifyGitFailure, ExtensionOpError } from './errors.js';
 import { runGit } from './git-runner.js';
+import { loadIsomorphicGit } from './git-module.js';
 import { getManagerRoot } from './paths.js';
 import { hostLabel, toGithubUrl } from './remote-url.js';
 import { anySignal, redactUrl } from './util.js';
@@ -137,6 +137,7 @@ async function probeSystem(route, { branch, timeoutMs, gitProxyKeys, signal }) {
 }
 
 async function probeBuiltin(route, { branch, timeoutMs, signal }) {
+    const git = await loadIsomorphicGit();
     const timeout = AbortSignal.timeout(timeoutMs);
     const client = createGitHttpClient({ proxy: route.proxy, signal: anySignal([signal, timeout]) });
     try {

@@ -1,6 +1,6 @@
 export const CLIENT_SCRIPT = String.raw`
 (() => {
-    const BRIDGE_VERSION = '0.7.2';
+    const BRIDGE_VERSION = '0.7.3';
     const API_VERSION = 'v1';
     const BASE_URL = '/api/plugins/baibaoku/v1';
     const STATUS_CACHE_MS = 60 * 1000;

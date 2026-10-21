@@ -1,6 +1,6 @@
 {
   "name": "sillytavern-baibaoku",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "BaiBaoKu, a universal per-user KV storage server plugin for SillyTavern extensions.",
   "type": "module",
   "main": "index.js",
@@ -16,5 +16,15 @@
   },
   "optionalDependencies": {
     "better-sqlite3": "^11.10.0"
+  },
+  "dependencies": {
+    "bytes": "^3.1.2",
+    "isomorphic-git": "^1.44.3",
+    "proxy-agent": "^6.5.0",
+    "sanitize-filename": "^1.6.4",
+    "write-file-atomic": "^5.0.1"
+  },
+  "devDependencies": {
+    "simple-git": "^3.36.0"
   }
 }

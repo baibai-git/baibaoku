@@ -1,13 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import git from 'isomorphic-git';
 import { createGitHttpClient } from './builtin-http.js';
+import { loadIsomorphicGit } from './git-module.js';
 import { clearInProgressState, getGitDir } from './repo-fs.js';
 import { tempRefName } from './repo-system.js';
 import { classifyBuiltinError } from './sources.js';
 import { anySignal } from './util.js';
 
 const FILE_LOCK_CODES = new Set(['EPERM', 'EBUSY', 'EACCES']);
+// 依赖缺失时不能在这里 throw,否则整个插件都起不来;真正用到内置后端时再给出明确错误
+const realGit = await loadIsomorphicGit().catch(() => null);
+const git = realGit ?? new Proxy({}, {
+    get() {
+        throw new Error('内置 git 后端不可用:柏宝库依赖 isomorphic-git,请先在柏宝库目录运行 npm install --omit=dev。');
+    },
+});
 
 function toProgress(onProgress) {
     if (!onProgress) return undefined;

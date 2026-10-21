@@ -92,7 +92,7 @@ GET /api/plugins/baibaoku/v1/status
     "installed": true,
     "id": "baibaoku",
     "name": "柏宝库",
-    "version": "0.7.2",
+    "version": "0.7.3",
     "capabilities": {
       "saveGenerateCompleteResponseTool": true,
       "regexBridge": true

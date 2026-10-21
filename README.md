@@ -47,6 +47,8 @@ GET /api/plugins/baibaoku/v1/status
 
 自己开发柏宝库的目录可以运行 `git config baibaoku.selfUpdate false` 关掉（同时恢复原来的上游）；酒馆 `config.yaml` 里设了 `enableServerPluginsAutoUpdate: false` 时也不会自动更新。
 
+版本更新如果带来新的 npm 依赖，控制台会提示在柏宝库目录运行 `npm install --omit=dev` 后重启；`isomorphic-git` 缺失时插件仍能正常启动，只是没有系统 git 时无法使用内置 git 后端。
+
 前端扩展也可以加载 companion 脚本：
 
 ```js

@@ -2966,12 +2966,16 @@ function buildExtensionManifestBundle(req) {
 
     const builtInExtensions = readExtensionFolders(PUBLIC_DIRECTORIES.extensions)
         .filter(folder => folder !== 'third-party')
+        .filter(folder => hasExtensionManifest(PUBLIC_DIRECTORIES.extensions, folder))
         .map(folder => ({ type: 'system', name: folder }));
 
+    // 和酒馆原生 /discover 一致:没有 manifest.json 的目录(装到一半的残留)不算扩展,也不能挡住同名的全局扩展
     const userExtensions = readExtensionFolders(userExtensionsDirectory)
+        .filter(folder => hasExtensionManifest(userExtensionsDirectory, folder))
         .map(folder => ({ type: 'local', name: `third-party/${folder}` }));
 
     const globalExtensions = readExtensionFolders(PUBLIC_DIRECTORIES.globalExtensions)
+        .filter(folder => hasExtensionManifest(PUBLIC_DIRECTORIES.globalExtensions, folder))
         .map(folder => ({ type: 'global', name: `third-party/${folder}` }))
         .filter(extension => !userExtensions.some(userExtension => userExtension.name === extension.name));
 
@@ -3013,6 +3017,8 @@ function readExtensionFolders(directory) {
     }
 
     return fs.readdirSync(directory)
+        // 扩展管理安装时用的临时目录
+        .filter(folder => !folder.startsWith('.baibaoku-'))
         .filter(folder => {
             try {
                 return fs.statSync(path.join(directory, folder)).isDirectory();
@@ -3020,6 +3026,10 @@ function readExtensionFolders(directory) {
                 return false;
             }
         });
+}
+
+function hasExtensionManifest(directory, folder) {
+    return fs.existsSync(path.join(directory, folder, 'manifest.json'));
 }
 
 function getExtensionManifestPath(req, extension) {

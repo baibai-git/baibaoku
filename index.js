@@ -3,6 +3,7 @@ import { PLUGIN_ID, PLUGIN_NAME } from './src/constants.js';
 import { DatabaseManager } from './src/database.js';
 import { VectorStore } from './src/vector-store.js';
 import { installEarlyBridge } from './src/early-bridge-installer.js';
+import { closeExtensionManager, initExtensionManager } from './src/extension-manager/index.js';
 import { installOpenAITokenizerBridge } from './src/openai-tokenizer-bridge-installer.js';
 import { installRegexBridge } from './src/regex-bridge-installer.js';
 import { installThemeBridge } from './src/theme-bridge-installer.js';
@@ -20,6 +21,7 @@ const vectorStore = new VectorStore(manager);
 
 export async function init(router) {
     registerApi(router, manager, vectorStore);
+    await initExtensionManager(router);
     installEarlyBridge();
     installOpenAITokenizerBridge();
     installWorldInfoTokenizerBridge();
@@ -28,6 +30,11 @@ export async function init(router) {
 }
 
 export async function exit() {
+    try {
+        await closeExtensionManager();
+    } catch (error) {
+        console.warn('[BaiBaoKu] 关闭扩展管理失败:', error?.message ?? error);
+    }
     closeStEndpointCaches();
     manager.closeAll();
 }

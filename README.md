@@ -41,6 +41,12 @@ GET /api/plugins/baibaoku/v1/status
 
 其他扩展也可以用这个接口探测柏宝库是否安装、当前版本号和 SQLite 驱动状态。
 
+### 自动更新
+
+酒馆启动时，柏宝库会在加载主代码之前检查并更新自己：在直连、代理和镜像之间挑能用的线路，最多等几秒，连不上就先用当前版本启动。为了不让酒馆自带的插件自动更新直连 GitHub 卡住启动，柏宝库会把当前分支的上游改成本地的 `origin/<分支>`，所以在柏宝库目录里直接 `git pull` 只会合并已经下载好的提交，要联网拉取请用 `git pull origin main`。
+
+自己开发柏宝库的目录可以运行 `git config baibaoku.selfUpdate false` 关掉（同时恢复原来的上游）；酒馆 `config.yaml` 里设了 `enableServerPluginsAutoUpdate: false` 时也不会自动更新。
+
 前端扩展也可以加载 companion 脚本：
 
 ```js

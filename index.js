@@ -1,40 +1,23 @@
-import { registerApi } from './src/api.js';
-import { PLUGIN_ID, PLUGIN_NAME } from './src/constants.js';
-import { DatabaseManager } from './src/database.js';
-import { VectorStore } from './src/vector-store.js';
-import { installEarlyBridge } from './src/early-bridge-installer.js';
-import { closeExtensionManager, initExtensionManager } from './src/extension-manager/index.js';
-import { installOpenAITokenizerBridge } from './src/openai-tokenizer-bridge-installer.js';
-import { installRegexBridge } from './src/regex-bridge-installer.js';
-import { installThemeBridge } from './src/theme-bridge-installer.js';
-import { installWorldInfoTokenizerBridge } from './src/world-info-tokenizer-bridge-installer.js';
-import { closeStEndpointCaches } from './src/st-endpoints.js';
+// 入口薄壳:先限时检查并更新柏宝库自己(self-update.js),再加载 src/plugin.js 里的主代码。
+// 这个文件和 self-update.js 只能 import Node 内置模块和酒馆自己的模块,不能 import src/ 下的任何文件:
+// 否则更新前旧版模块就进了 ESM 缓存,更新后会和新代码混着跑。
+// 这两个文件自己的改动要再重启一次才生效,所以文件位置和 info/init/exit 的约定保持不变。
+import { runSelfUpdate } from './self-update.js';
 
 export const info = {
-    id: PLUGIN_ID,
-    name: PLUGIN_NAME,
+    id: 'baibaoku',
+    name: '柏宝库',
     description: 'A universal per-user KV storage server plugin for SillyTavern extensions.',
 };
 
-const manager = new DatabaseManager();
-const vectorStore = new VectorStore(manager);
+let plugin = null;
 
 export async function init(router) {
-    registerApi(router, manager, vectorStore);
-    await initExtensionManager(router);
-    installEarlyBridge();
-    installOpenAITokenizerBridge();
-    installWorldInfoTokenizerBridge();
-    installThemeBridge();
-    installRegexBridge();
+    await runSelfUpdate();
+    plugin = await import('./src/plugin.js');
+    await plugin.init(router);
 }
 
 export async function exit() {
-    try {
-        await closeExtensionManager();
-    } catch (error) {
-        console.warn('[BaiBaoKu] 关闭扩展管理失败:', error?.message ?? error);
-    }
-    closeStEndpointCaches();
-    manager.closeAll();
+    await plugin?.exit();
 }

@@ -3897,7 +3897,10 @@ function makeEarlyBridgeScript(options = {}) {
   }
 
   function getManifestRequestName(url) {
-    var match = /^\\/scripts\\/extensions\\/(.+)\\/manifest\\.json$/i.exec(url.pathname || '');
+    // 只认扩展根目录的 manifest.json:内置扩展 /scripts/extensions/<name>/manifest.json,
+    // 第三方扩展 /scripts/extensions/third-party/<name>/manifest.json。
+    // 扩展自己子目录里的同名文件(例如 Vite 构建清单 dist/manifest.json)不能拦截,否则会被当成未知扩展返回 404。
+    var match = /^\\/scripts\\/extensions\\/((?:third-party\\/)?[^/]+)\\/manifest\\.json$/i.exec(url.pathname || '');
     if (!match) return null;
     try {
       return decodeURIComponent(match[1]);
@@ -4245,10 +4248,15 @@ function makeEarlyBridgeScript(options = {}) {
       });
     }
 
-    return makeTextResponse('Manifest not found for ' + name, 404, {
-      'x-baibaoku-extension-manifest-cache': 'missing',
-      'x-baibaoku-extension-name': name,
-    });
+    if (hasOwn(bundle.missing, name)) {
+      return makeTextResponse('Manifest not found for ' + name, 404, {
+        'x-baibaoku-extension-manifest-cache': 'missing',
+        'x-baibaoku-extension-name': name,
+      });
+    }
+
+    // bundle 里根本不认识这个名字(不是已知扩展),不要擅自回 404,交回酒馆原生静态路由处理
+    return null;
   }
 
   function normalizeThirdPartyExtensionName(value) {
@@ -4621,7 +4629,9 @@ function makeEarlyBridgeScript(options = {}) {
       }
 
       if (route.kind === 'extensionManifest') {
-        return await makeExtensionManifestResponse(route);
+        var manifestResponse = await makeExtensionManifestResponse(route);
+        if (manifestResponse) return manifestResponse;
+        return callOriginal(input, init);
       }
 
       state.requests[route.kind] += 1;

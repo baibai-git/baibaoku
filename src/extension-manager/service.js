@@ -142,10 +142,12 @@ function unreachableError(check, action, remote) {
     const failed = check.results.filter(result => !result.ok);
     const authoritative = failed.filter(result => result.route.authoritative && result.failure?.kind !== 'aborted');
     if (authoritative.length > 0 && authoritative.every(result => result.failure.kind === 'auth' || result.failure.kind === 'not-found')) {
-        return new ExtensionOpError('REPO_NOT_FOUND', `仓库不存在,或者是私有仓库:${remote.display}`, {
+        // 安装时多半是用户把链接输错或复制错了,只提示检查链接;更新时链接不是刚填的,保留原来的说明
+        const installing = action === '安装';
+        return new ExtensionOpError('REPO_NOT_FOUND', installing ? '找不到这个扩展。' : `仓库不存在,或者是私有仓库:${remote.display}`, {
             status: 400,
             stage: 'probe',
-            hint: '检查扩展地址有没有写错;私有仓库需要先在系统 git 里配置好登录凭据。',
+            hint: installing ? '请确认输入的链接没有写错或复制错。' : '检查扩展地址有没有写错;私有仓库需要先在系统 git 里配置好登录凭据。',
         });
     }
     return new ExtensionOpError('NETWORK', `${action}失败,所有线路都连不上:${describeFailures(failed) || '没有可用的线路'}`, {

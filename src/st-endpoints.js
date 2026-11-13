@@ -3897,7 +3897,8 @@ function makeEarlyBridgeScript(options = {}) {
   }
 
   function getManifestRequestName(url) {
-    var match = /^\\/scripts\\/extensions\\/(.+)\\/manifest\\.json$/i.exec(url.pathname || '');
+    // 只认扩展根目录的 manifest.json(内置 <名字>、第三方 third-party/<名字>),扩展自己子目录里的同名文件(如 dist/manifest.json)不拦
+    var match = /^\\/scripts\\/extensions\\/((?:third-party\\/)?[^/]+)\\/manifest\\.json$/i.exec(url.pathname || '');
     if (!match) return null;
     try {
       return decodeURIComponent(match[1]);
@@ -4245,10 +4246,8 @@ function makeEarlyBridgeScript(options = {}) {
       });
     }
 
-    return makeTextResponse('Manifest not found for ' + name, 404, {
-      'x-baibaoku-extension-manifest-cache': 'missing',
-      'x-baibaoku-extension-name': name,
-    });
+    // 缓存里没有就交还给酒馆原生静态路由,别自己造 404
+    return null;
   }
 
   function normalizeThirdPartyExtensionName(value) {
@@ -4621,7 +4620,7 @@ function makeEarlyBridgeScript(options = {}) {
       }
 
       if (route.kind === 'extensionManifest') {
-        return await makeExtensionManifestResponse(route);
+        return await makeExtensionManifestResponse(route) || await callOriginal(input, init);
       }
 
       state.requests[route.kind] += 1;
